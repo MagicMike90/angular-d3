@@ -1,0 +1,7 @@
+.states {
+  fill: #222;
+}
+
+.states :hover {
+  fill: orange;
+}
