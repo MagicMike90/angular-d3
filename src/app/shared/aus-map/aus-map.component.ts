@@ -5,6 +5,7 @@ import * as d3Shape from "d3-shape";
 import * as d3Array from "d3-array";
 import * as d3Axis from "d3-axis";
 import * as topojson from 'topojson';
+import * as leaflet from 'leaflet';
 
 @Component({
   selector: 'app-aus-map',
@@ -34,10 +35,16 @@ export class AusMapComponent implements OnInit {
     this.svg = d3.select("svg").attr("width", this.width).attr("height", this.height);;
 
     // this.projection = d3.geoMercator()
-    this.projection = d3.geoConicConformal()
+    // this.projection = d3.geoConicConformal()
+    //   .rotate([-132, 0])
+    //   .center([0, -27])
+    //   .parallels([-18, -36])
+    //   .scale(Math.min(this.height * 1.2, this.width * 0.8))
+    //   .translate([this.width / 2, this.height / 2])
+    //   .precision(0.1);
+    this.projection = d3.geoMercator()
       .rotate([-132, 0])
       .center([0, -27])
-      .parallels([-18, -36])
       .scale(Math.min(this.height * 1.2, this.width * 0.8))
       .translate([this.width / 2, this.height / 2])
       .precision(0.1);
@@ -46,19 +53,29 @@ export class AusMapComponent implements OnInit {
       .projection(this.projection);
 
 
-    this.url = "../../../assets/australia.json";
+    this.url = "../../../assets/states.min.geojson";
   }
   private drawMap() {
     const self = this;
-    d3.json(this.url, function (err, australia: any) {
+    d3.json(this.url, function (err, aus: any) {
+      if(err) {
+        return console.error('d3', err);
+      }
+
       // self.svg.append("path")
       //   .attr("class", "states")
       //   .datum(topojson.feature(us, us.objects.states))
       //   .attr("d", self.path)
+      // self.svg.append("g")
+      //   .attr("class", "states")
+      //   .selectAll("path")
+      //   .data(topojson.feature(australia, australia.objects.states).features)
+      //   .enter().append("path")
+      //   .attr("d", self.path)
       self.svg.append("g")
         .attr("class", "states")
         .selectAll("path")
-        .data(topojson.feature(australia, australia.objects.states).features)
+        .data(aus.features)
         .enter().append("path")
         .attr("d", self.path)
     })
