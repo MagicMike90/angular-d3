@@ -18,69 +18,96 @@ export class AusMapComponent implements OnInit {
   width: number;
   height: number;
   svg: any;
+  g: any;
   projection: any;
   path: any;
   url: string;
+  active: any;
 
   constructor() { }
 
   ngOnInit() {
-    this.initChart();
+    this.initMap();
     this.drawMap();
-    this.addEvents();
   }
-  private initChart() {
-    this.width = 960;
-    this.height = 500;
-    this.svg = d3.select("svg").attr("width", this.width).attr("height", this.height);;
 
-    // this.projection = d3.geoMercator()
-    // this.projection = d3.geoConicConformal()
-    //   .rotate([-132, 0])
-    //   .center([0, -27])
-    //   .parallels([-18, -36])
-    //   .scale(Math.min(this.height * 1.2, this.width * 0.8))
-    //   .translate([this.width / 2, this.height / 2])
-    //   .precision(0.1);
-    this.projection = d3.geoMercator()
-      .rotate([-132, 0])
-      .center([0, -27])
-      .scale(Math.min(this.height * 1.2, this.width * 0.8))
-      .translate([this.width / 2, this.height / 2])
-      .precision(0.1);
-
-    this.path = d3.geoPath()
-      .projection(this.projection);
-
-
+  private initMap() {
+    this.width = 480;
+    this.height = 600;
     this.url = "../../../assets/states.min.geojson";
+    this.svg = d3.select("svg").attr("width", this.width).attr("height", this.height);
+    this.active = d3.select(null);
+
+    this.svg.append("rect")
+      .attr("class", "background")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .on("click", this.reset.bind(this));
+
+    this.g = this.svg.append("g").style("stroke-width", "1.5px");
+
+    // adjust height of frame
+    d3.select(self.frameElement).style("height", this.height + "px");
   }
+
   private drawMap() {
-    const self = this;
-    d3.json(this.url, function (err, aus: any) {
-      if(err) {
+    d3.json(this.url, (err, aus: any) => {
+      if (err) {
         return console.error('d3', err);
       }
 
-      // self.svg.append("path")
-      //   .attr("class", "states")
-      //   .datum(topojson.feature(us, us.objects.states))
-      //   .attr("d", self.path)
-      // self.svg.append("g")
-      //   .attr("class", "states")
-      //   .selectAll("path")
-      //   .data(topojson.feature(australia, australia.objects.states).features)
-      //   .enter().append("path")
-      //   .attr("d", self.path)
-      self.svg.append("g")
-        .attr("class", "states")
+      this.projection = d3.geoMercator().fitSize([this.width, this.height], aus);
+
+      this.path = d3.geoPath().projection(this.projection);
+
+      this.g.attr("class", "states")
         .selectAll("path")
         .data(aus.features)
         .enter().append("path")
-        .attr("d", self.path)
+        .attr("d", this.path)
+        .on("mouseover", function (d) {
+          d3.select("h2").text(d.properties.name);
+          // d3.select(this).attr("class", "county hover");
+        })
+        .on("mouseout", function (d) {
+          d3.select("h2").text("");
+          // d3.select(this).attr("class", "county");
+        })
+        .on("click", this.clicked.bind(this));;
+
+      this.g.append("path")
+        .datum(aus.features)
+        .attr("class", "mesh")
+        .attr("d", this.path);
     })
   }
-  addEvents() {
-    d3.select(self.frameElement).style("height", this.height + "px");
+  clicked(d, i, nodes) {
+    if (this.active.node() === nodes[i]) return this.reset();
+    this.active.classed("active", false);
+    this.active = d3.select(nodes[i]).classed("active", true);
+    // this.active = d3.select(nodes[i]).attr("class", "active");
+
+    const bounds = this.path.bounds(d);
+    const dx = bounds[1][0] - bounds[0][0];
+    const dy = bounds[1][1] - bounds[0][1];
+    const x = (bounds[0][0] + bounds[1][0]) / 2;
+    const y = (bounds[0][1] + bounds[1][1]) / 2;
+    const scale = .9 / Math.max(dx / this.width, dy / this.height);
+    const translate = [this.width / 2 - scale * x, this.height / 2 - scale * y];
+
+    this.g.transition()
+      .duration(750)
+      .style("stroke-width", 1.5 / scale + "px")
+      .attr("transform", "translate(" + translate + ")scale(" + scale + ")");
   }
+  reset() {
+    this.active.classed("active", false);
+    this.active = d3.select(null);
+
+    this.g.transition()
+      .duration(750)
+      .style("stroke-width", "1.5px")
+      .attr("transform", "");
+  }
+
 }

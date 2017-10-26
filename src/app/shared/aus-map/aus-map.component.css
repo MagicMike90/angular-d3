@@ -1,7 +1,48 @@
 .states {
-  fill: #222;
+  fill: rgb(52, 52, 52);
+  stroke: rgb(93, 93, 93);
 }
 
 .states :hover {
   fill: orange;
+}
+.states .active {
+  fill: orange;
+}
+.stats {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  margin: 5% 10%;
+}
+.text-white {
+  color: #fff;
+}
+.text-warning {
+  color: #f0b518;
+}
+.no-margin {
+  margin: 0;
+}
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #ccc;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+.mesh {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
